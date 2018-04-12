@@ -11,6 +11,8 @@ int main(int argc, char** argv)
     {
         filename = argv[1];
     }
+    string op_imagename = filename;
+    op_imagename = "gw_" + op_imagename;
     Mat imageSource = imread(filename);  
     cvNamedWindow("before", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
     imshow("before", imageSource);  
@@ -110,6 +112,8 @@ int main(int argc, char** argv)
     cvtColor(labMap, imageSource, COLOR_Lab2BGR);    
     cvNamedWindow("afterL", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
     imshow("afterL", imageSource);
+
+    imwrite(op_imagename.c_str(), imageSource);
     
     imageSource.release();
     labMap_ori.release();
