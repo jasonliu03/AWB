@@ -5,6 +5,24 @@
 #include<iostream>
 using namespace cv;
 using namespace std;
+
+float SQRT = 0.1; //0.1 ori
+int ITE_NUMS = 30; //80 ori
+float u=1,lamda=0.05,v=1;//u是B通道增益，v是R通道增益, ori lamda=0.05
+int PHI = 165; //180 ori
+
+void showMeanLab(const Mat labMap)
+{
+    //mean Lab
+    double L, a, b;
+    vector<Mat> imageLab;
+    split(labMap, imageLab);
+    L = mean(imageLab[0])[0];
+    a = mean(imageLab[1])[0];
+    b = mean(imageLab[2])[0];
+    cout << "L,a,b:" << L << " " << a << " " << b << endl;
+}
+
 void myBGR2YUV(const Mat image,Mat &result)
 {
     Mat_<Vec3b>::const_iterator it=image.begin<Vec3b>();
@@ -22,7 +40,7 @@ void myBGR2YUV(const Mat image,Mat &result)
 
 
 //估计图像result的色温为Temperature，阈值phi默认为180
-void CountTemperature(const Mat result,Mat &Temperature ,const short phi=180)
+void CountTemperature(const Mat result,Mat &Temperature ,const short phi=PHI)
 {
     Mat_<Vec3f>::const_iterator rit=result.begin<Vec3f>();
     Mat_<Vec3f>::const_iterator ritend=result.end<Vec3f>();
@@ -113,10 +131,9 @@ int main(int argc, char** argv)
     float Cb_T=Temperature.at<Vec3f>(0,0)[1];
     float Cr_T=Temperature.at<Vec3f>(0,0)[2];
     float C=sqrt(Cb_T*Cb_T+Cr_T*Cr_T);
-    float u=1,lamda=0.05,v=1;//u是B通道增益，v是R通道增益
 
     int index=0;//迭代次数
-    while (C>0.1&&index<80)
+    do
     {
 
         //增益计算 u,v
@@ -140,9 +157,11 @@ int main(int argc, char** argv)
         Cr_T=Temperature.at<Vec3f>(0,0)[2];
         C=sqrt(Cb_T*Cb_T+Cr_T*Cr_T);
         ++index;
-        cout<<"index="<<index<<" u="<<u<<"   v="<<v<<endl;
+        cout<<"index="<<index<<" u="<<u<<"   v="<<v<<"  C="<<C<<endl;
 
     }
+    while (C>SQRT&&index<ITE_NUMS);
+
     if(!index) image.copyTo(final);//拷贝
     cout<<"C="<<C<<"   Cb="<<Cb_T<<"   Cr="<<Cr_T<<endl;
 
@@ -152,12 +171,23 @@ int main(int argc, char** argv)
     namedWindow("WhiteBalance", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
     imshow("WhiteBalance",final);
     imwrite(op_imageName, final);
+
+    Mat labMap = image.clone();
+    cvtColor(labMap, labMap, COLOR_BGR2Lab);
+    showMeanLab(labMap);
+
+    labMap = final.clone();
+    cvtColor(labMap, labMap, COLOR_BGR2Lab);
+    showMeanLab(labMap);
+
     waitKey();
     
     image.release();
     result.release();
     final.release();
     Temperature.release();
+
+    labMap.release();
 
     return 0;
 }
