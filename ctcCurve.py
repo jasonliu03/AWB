@@ -1,5 +1,6 @@
 import math
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
 colorDict = {}
 
@@ -17,10 +18,11 @@ for fn in "black.txt white.txt gray.txt".split():
     tmpList = []
     ptList = []
     
-
-
 GR = []
 GB = []
+
+def func(x, a, c):
+    return a*x*x + c
 
 basicLayout = 130
 for e in "black white gray".split():
@@ -35,19 +37,27 @@ for e in "black white gray".split():
     sub = fig.add_subplot(basicLayout)
     sub.set_title(e)
 
-    plt.xlim(xmax=0.8,xmin=-0.8)
-    plt.ylim(ymax=0.8,ymin=-0.8)
+    plt.xlim(xmax=1,xmin=-1)
+    plt.ylim(ymax=1,ymin=-1)
     plt.annotate("(3,6)", xy = (3, 6), xytext = (4, 5), arrowprops = dict(facecolor = 'black', shrink = 0.1))
     plt.xlabel("x")
     plt.ylabel("y")
     plt.plot(GR,GB,'go')
     import numpy as np
-    z = np.polyfit(GR, GB, 1)
-    p = np.poly1d(z)
-    t = range(-1,2)
-    v = p(t)
+    z1 = np.polyfit(GR, GB, 1)
+    z, pcov = curve_fit(func, GR, GB)
+    p = np.poly1d(z1)
+    
+    k = range(-10,10,1)
+    t = []
+    t.extend(k[i]/10.0 for i in range(0, len(k)))
+    v = []
+    v.extend(z[0]*i*i + z[1] + 0.2 for i in t)
+    v1 = p(t) + 0.2
+    print z1
     print z
     sub.plot(t, v)
+    sub.plot(t, v1)
     GR = []
     GB = []
 plt.show()
