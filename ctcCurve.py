@@ -25,6 +25,7 @@ def func(x, a, c):
     return a*x*x + c
 
 basicLayout = 130
+sArg_L = 0.2
 for e in "black white gray".split():
     for pt in colorDict[e]:
         x = math.log(1.0*int(pt[1])/int(pt[0]),2)
@@ -52,8 +53,8 @@ for e in "black white gray".split():
     t = []
     t.extend(k[i]/10.0 for i in range(0, len(k)))
     v = []
-    v.extend(z[0]*i*i + z[1] + 0.2 for i in t)
-    v1 = p(t) + 0.2
+    v.extend(z[0]*i*i + z[1] + sArg_L for i in t)
+    v1 = p(t) + sArg_L
     print z1
     print z
     sub.plot(t, v)
