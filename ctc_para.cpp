@@ -5,7 +5,46 @@
   
 using namespace cv;  
 using namespace std;
-  
+double* Projection(double a, double b, double x, double y, double m, double n, double c)
+{
+    double  x1 = 0, y4 = 0, x2 = 0, y2 = 0, x3 = 0, y3 = 0, gen = 0, gen2 = 0;  
+    if (a == 0)
+    {
+        x1 = x;
+        y4 = b;
+        x2 = x;
+        y2 = m * x2*x2 + n * x2 + c;
+        double *rst = new double[2]{x2, y2};
+        return rst;
+    }
+    else
+    {
+        x1 = (x + (y - b)*a) / ((a*a) + 1);
+        y4 = a * x1 + b;
+        gen = (n + (1 / a))*(n + (1 / a)) - 4 * m*(c - (1 / a)*x - y);
+        if (gen >= 0)
+        {
+            gen2 = sqrt(gen);
+            x2 = (-n - (1 / a) + gen2) / (2 * m);
+            y2 = (m*x2*x2) + n * x2 + c;
+            x3 = (-n - (1 / a) - gen2) / (2 * m);
+            y3 = (m*x3*x3) + n * x3 + c;
+            if (y3 > y2)
+            {
+                y2 = y3;
+                x2 = x3;
+            }
+            double *rst = new double[2]{x2, y2};
+            return rst;
+        }
+        else if (gen < 0)
+        {
+            double *rst = new double[2]{x1, y4};
+            return rst;
+        }
+    }
+}
+
 int main(int argc, char** argv)  
 {  
     char * filename = "test.jpg";
@@ -15,6 +54,7 @@ int main(int argc, char** argv)
     }
     Mat imageSource = imread(filename);  
     cvNamedWindow("before", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
+    cvResizeWindow("before", 1024, 768);
     imshow("before", imageSource);  
     
     Scalar mean2;
@@ -27,8 +67,6 @@ int main(int argc, char** argv)
     cout << "avgB,G,R:" << avgB << " " << avgG << " " << avgR << endl;
     Scalar logPt = Scalar(log(avgG/avgR)/log(2), log(avgG/avgB)/log(2));
     
-    float x1=0,y1=0,x2=0,y2=0,x3=0,y3=0,gen=0,gen3=0,x4=0,x5=0,k=0,k2=0;
-    double gen2=0,gen4=0;
     float a = -1;
     float b = 0.5;
     float x = -1;
@@ -49,86 +87,11 @@ int main(int argc, char** argv)
         c = atof(argv[5]);
     }
     
-    if (a==0)
-    {
-     x1=x;
-     y1=b;
-    }
-    else
-    {
-     x1=(x+(y-b)*a)/((a*a)+1);
-     y1=a*x1+b;
-    }
-    printf("\n投影坐标为：");
-    printf("(%f",x1);
-    printf(",%f)",y1);
-    if (a==0)
-    {
-     x2=x;
-     y2=m*x2*x2+n*x2+c;
-     printf("\n交点坐标为：（%f，%f）",x2,y2);
-    }
-    else
-    {
-     gen=(n+(1/a))*(n+(1/a))-4*m*(c-(1/a)*x-y);
-      if (gen>0)
-      {
-       gen2=sqrt(gen);
-       x2=(-n-(1/a)+gen2)/(2*m);
-       y2=(m*x2*x2)+n*x2+c;
-       x3=(-n-(1/a)-gen2)/(2*m);
-       y3=(m*x3*x3)+n*x3+c;
-       if (y2>y3)
-       {
-        printf("\n交点坐标为：（%f，%f）",x2,y2);
-        x0 = x2;
-        y0 = y2;
-       }
-       else if (y3>y2)
-       {
-        printf("\n交点坐标为：（%f，%f）",x3,y3);
-        x0 = x3;
-        y0 = y3;
-       }
-      }
-      else if (gen==0)
-      {
-       x2=(-n-(1/a))/2*m;
-       y2=(m*x2*x2)+n*x2+c;
-       printf("\n只有一个交点，交点坐标为：（%f，%f）",x2,y2);
-      }
-      else if (gen<0)
-      {
-       printf("\n直线与抛物线没有交点");
-      }
-    }
-    gen3=(n*n)-(4*m*c);
-    if (gen3>=0)
-    {
-     gen4=sqrt(gen3);
-     x4=(-n+gen4)/(2*m);
-     x5=(-n-gen4)/(2*m);
-     k=(-c)/x5;
-     k2=(-c)/x4;
-     if (k>=k2)
-     {
-      k=k2;
-     }
-     if (c>=0)
-     {
-      printf("\n抛物线与坐标轴的交点关系式为：y=%fx+%f",k,c);
-     }
-     else if (c<0)
-     {
-      printf("\n抛物线与坐标轴的交点关系式为：y=%fx%f",k,c);
-     }
-   
-    }
-    else if (gen3<0)
-    {
-     printf("\n抛物线与坐标轴无交点");
-    }
-
+    double *tmp = NULL;
+    tmp = Projection(a, b, x, y, m, n, c);
+    x0 = tmp[0];
+    y0 = tmp[1];
+    delete(tmp);
 
     cout << "rst:" << x << " " << y << " " << x0 << " " << y0 << endl;
     
@@ -154,6 +117,8 @@ int main(int argc, char** argv)
     //RGB三通道图像合并  
     merge(imageRGB, imageSource);  
     cvNamedWindow("after", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
+    cvResizeWindow("after", 1024, 768);
+    cvMoveWindow("after", 1024, 0);
     imshow("after", imageSource);  
     string sOutName(filename);
     string pre("ctc_");

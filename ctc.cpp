@@ -14,6 +14,7 @@ int main(int argc, char** argv)
     }
     Mat imageSource = imread(filename);  
     cvNamedWindow("before", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
+    cvResizeWindow("before", 1024, 768);
     imshow("before", imageSource);  
     
     Scalar mean2;
@@ -63,6 +64,8 @@ int main(int argc, char** argv)
     //RGB三通道图像合并  
     merge(imageRGB, imageSource);  
     cvNamedWindow("after", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
+    cvResizeWindow("after", 1024, 768);
+    cvMoveWindow("after", 1024, 0);
     imshow("after", imageSource);  
     string sOutName(filename);
     string pre("ctc_");
