@@ -32,9 +32,11 @@ def Projection( a,  b,  x,  y,  m,  n,  c):
 if __name__ == '__main__':
     srcPtX = []
     srcPtY = []
+    bShowIdx = False
     if len(sys.argv) >= 3:
-        srcPtX.append(float(sys.argv[1]))
-        srcPtY.append(float(sys.argv[2]))
+        bShowIdx = False if int(sys.argv[1]) == 0 else True
+        srcPtX.append(float(sys.argv[2]))
+        srcPtY.append(float(sys.argv[3]))
     else:
         print("please input point axis")
         exit(-1)
@@ -48,7 +50,7 @@ if __name__ == '__main__':
             line = f.readline()
             while line:
                 ptList = line.split()
-                tmpList.append(ptList)
+                tmpList.append(ptList[-3:])
                 colorDict[fn.split(".")[0]] = tmpList
                 line = f.readline()
         allList.extend(tmpList)
@@ -65,17 +67,19 @@ if __name__ == '__main__':
     basicLayout = 230
     sArg_L = 0
     sArg_P = 0
-    if len(sys.argv) == 5:
-        sArg_L = float(sys.argv[3])
-        sArg_P = float(sys.argv[4])
+    if len(sys.argv) == 6:
+        sArg_L = float(sys.argv[4])
+        sArg_P = float(sys.argv[5])
     else:
         print("please input point axis")
     for e in "black white gray all".split():
+        index = 0
         for pt in colorDict[e]:
             x = math.log(1.0*int(pt[1])/int(pt[0]),2)
             y = math.log(1.0*int(pt[1])/int(pt[2]),2)
             GR.append(x)
             GB.append(y)
+            index += 1
     
         fig = plt.figure('Color Curve')
         basicLayout+=1
@@ -87,9 +91,9 @@ if __name__ == '__main__':
         sub.set_xlabel("x")
         sub.set_ylabel("y")
         sub.plot(GR,GB,'go')
-        
-        #for i in range(len(GR)):
-        #    sub.annotate(str(i+1), xy = (GR[i], GB[i]), xytext = (GR[i]+0.01, GB[i]+0.001))
+        if bShowIdx: 
+            for i in range(len(GR)):
+                sub.annotate(str(i+1), xy = (GR[i], GB[i]), xytext = (GR[i]+0.01, GB[i]+0.001))
         sub.plot(srcPtX, srcPtY, 'yo')
         bbox = dict(boxstyle="round", fc="0.8")
         arrowprops = dict(
