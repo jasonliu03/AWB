@@ -5,17 +5,84 @@
   
 using namespace cv;  
 using namespace std;
+//double* Projection(double a, double b, double x, double y, double m, double n, double c)
+//{
+//    double  x1 = 0, y4 = 0, x2 = 0, y2 = 0, x3 = 0, y3 = 0, gen = 0, gen2 = 0;  
+//    if (a == 0)
+//    {
+//        x1 = x;
+//        y4 = b;
+//        x2 = x;
+//        y2 = m * x2*x2 + n * x2 + c;
+//        double *rst = new double[2]{x2, y2};
+//        return rst;
+//    }
+//    else
+//    {
+//        x1 = (x + (y - b)*a) / ((a*a) + 1);
+//        y4 = a * x1 + b;
+//        gen = (n + (1 / a))*(n + (1 / a)) - 4 * m*(c - (1 / a)*x - y);
+//        if (gen >= 0)
+//        {
+//            gen2 = sqrt(gen);
+//            x2 = (-n - (1 / a) + gen2) / (2 * m);
+//            y2 = (m*x2*x2) + n * x2 + c;
+//            x3 = (-n - (1 / a) - gen2) / (2 * m);
+//            y3 = (m*x3*x3) + n * x3 + c;
+//            if (y3 > y2)
+//            {
+//                y2 = y3;
+//                x2 = x3;
+//            }
+//            double *rst = new double[2]{x2, y2};
+//            return rst;
+//        }
+//        else if (gen < 0)
+//        {
+//            double *rst = new double[2]{x1, y4};
+//            return rst;
+//        }
+//    }
+//}
+
 double* Projection(double a, double b, double x, double y, double m, double n, double c)
 {
-    double  x1 = 0, y4 = 0, x2 = 0, y2 = 0, x3 = 0, y3 = 0, gen = 0, gen2 = 0;  
-    if (a == 0)
+    double  x1 = 0, y4 = 0, x2 = 0, y2 = 0, x3 = 0, y3 = 0, gen = 0, gen2 = 0,x5=0,y5=0,x4=0,y6=0,gen3=0,gen4=0;
+    gen3 = (n - a)*(n - a) - 4 * m*(c - b);//*先计算直线与抛物线的交点
+    if (gen3 >= 0)
+    {
+        gen4 = sqrt(gen3);
+        x5 = (a - n + gen4) / (2 * m);
+        y5 = a * x5 + b;
+        x4 = (a - n - gen4) / (2 * m);
+        y6 = a * x4 + b;
+        if (x5 >= x4)//*取最左边的点为X5
+        {
+            x5 = x4;
+            y5 = y6;
+        }
+    }
+    else if (gen3 < 0)//*如果没有交点 取（0，0）
+    {
+        x5 = 0;
+        y5 = 0;
+    }
+    if (a == 0) //*此时投影是一条垂直X轴的直线 交点只有一个 
     {
         x1 = x;
         y4 = b;
         x2 = x;
         y2 = m * x2*x2 + n * x2 + c;
-        double *rst = new double[2]{x2, y2};
-        return rst;
+        if (x2 < x5) //*交点在X5左边时，取投影点
+        {
+            double *rst = new double[2]{ x1, y4 };
+            return rst;
+        }
+        else //*交点在X5右边时，取交点
+        {
+            double *rst = new double[2]{ x2, y2 };
+            return rst;
+        }
     }
     else
     {
@@ -34,12 +101,20 @@ double* Projection(double a, double b, double x, double y, double m, double n, d
                 y2 = y3;
                 x2 = x3;
             }
-            double *rst = new double[2]{x2, y2};
-            return rst;
+            if (x2 < x5) //*交点在X3左边时，取投影点
+            {
+                double *rst = new double[2]{ x1, y4 };
+                return rst;
+            }
+            else //*交点在X3右边时，取交点
+            {
+                double *rst = new double[2]{ x2, y2 };
+                return rst;
+            }
         }
-        else if (gen < 0)
+        else if (gen < 0)//*此时抛物线与垂线无交点，取投影点
         {
-            double *rst = new double[2]{x1, y4};
+            double *rst = new double[2]{ x1, y4 };
             return rst;
         }
     }
