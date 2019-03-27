@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <stdio.h>
+#include <dirent.h>
   
 using namespace cv;  
 using namespace std;
@@ -122,91 +123,111 @@ double* Projection(double a, double b, double x, double y, double m, double n, d
 
 int main(int argc, char** argv)  
 {  
-    char * filename = "test.jpg";
+
+    char * dirname = "./";
     if(argc > 1)
     {
-        filename = argv[1];
+        dirname = argv[1];
     }
-    Mat imageSource = imread(filename);  
-    cvNamedWindow("before", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
-    cvResizeWindow("before", 1024, 768);
-    imshow("before", imageSource);  
-    
-    Scalar mean2;
-    mean2 = mean(imageSource);
 
-    double avgB=0, avgG=0, avgR=0;
-    avgB = mean2[0];
-    avgG = mean2[1];
-    avgR = mean2[2];
-    cout << "avgB,G,R:" << avgB << " " << avgG << " " << avgR << endl;
-    Scalar logPt = Scalar(log(avgG/avgR)/log(2), log(avgG/avgB)/log(2));
+    struct dirent *dirp;
     
-    float a = -1;
-    float b = 0.5;
-    float x = -1;
-    float y = -1;
-    float m = -1;
-    float n = 0;
-    float c = 1;
-    float x0 = 0;
-    float y0 = 0;
+    DIR* dir = opendir(dirname);
     
-    x = logPt[0];
-    y = logPt[1];
-    if(argc > 2)
-    {
-        a = atof(argv[2]);
-        b = atof(argv[3]);
-        m = atof(argv[4]);
-        c = atof(argv[5]);
+    while ((dirp = readdir(dir)) != NULL) {
+        if (dirp->d_type == DT_REG) {
+            const char *filename = dirp->d_name;
+            stringstream ss;
+            ss << dirname << dirp->d_name;
+            string sName = ss.str();
+            const char *pathName = sName.c_str();
+            cout << pathName << endl;
+            Mat imageSource = imread(pathName);  
+            cvNamedWindow("before", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
+            cvResizeWindow("before", 1024, 768);
+            imshow("before", imageSource);  
+            
+            Scalar mean2;
+            mean2 = mean(imageSource);
+
+            double avgB=0, avgG=0, avgR=0;
+            avgB = mean2[0];
+            avgG = mean2[1];
+            avgR = mean2[2];
+            cout << "avgB,G,R:" << avgB << " " << avgG << " " << avgR << endl;
+            Scalar logPt = Scalar(log(avgG/avgR)/log(2), log(avgG/avgB)/log(2));
+            
+            float a = -1;
+            float b = 0.5;
+            float x = -1;
+            float y = -1;
+            float m = -1;
+            float n = 0;
+            float c = 1;
+            float x0 = 0;
+            float y0 = 0;
+            
+            x = logPt[0];
+            y = logPt[1];
+            if(argc > 2)
+            {
+                a = atof(argv[2]);
+                b = atof(argv[3]);
+                m = atof(argv[4]);
+                c = atof(argv[5]);
+            }
+            
+            double *tmp = NULL;
+            tmp = Projection(a, b, x, y, m, n, c);
+            x0 = tmp[0];
+            y0 = tmp[1];
+            delete(tmp);
+
+            cout << "rst:" << x << " " << y << " " << x0 << " " << y0 << endl;
+            
+            double KR=0, KB=0;
+            KR = pow(2, x0);
+            KB = pow(2, y0);
+            
+            
+
+            //求原始图像的RGB分量的均值  
+            double R, G, B;  
+            vector<Mat> imageRGB;  
+
+            //RGB三通道分离  
+            split(imageSource, imageRGB);  
+                        
+  
+            //调整RGB三个通道各自的值  
+            imageRGB[0] = imageRGB[0] * KB;  
+            imageRGB[2] = imageRGB[2] * KR;  
+  
+
+            //RGB三通道图像合并  
+            merge(imageRGB, imageSource);  
+            cvNamedWindow("after", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
+            cvResizeWindow("after", 1024, 768);
+            cvMoveWindow("after", 1024, 0);
+            imshow("after", imageSource);  
+            string sOutName(filename);
+            string pre("ctc_");
+            pre.append(sOutName);
+            imwrite(pre.c_str(), imageSource);
+
+            cout << "KB,KG,kR:" << KB << " " << "1" << " " << KR << endl;
+            //求变换后图像RGB分量的均值  
+            B = mean(imageRGB[0])[0];  
+            G = mean(imageRGB[1])[0];  
+            R = mean(imageRGB[2])[0];  
+            cout << "B,G,R:" << B << " " << G << " " << R << endl;
+  
+            //waitKey();  
+        } else if (dirp->d_type == DT_DIR) {
+            // 文件夹
+        }
     }
     
-    double *tmp = NULL;
-    tmp = Projection(a, b, x, y, m, n, c);
-    x0 = tmp[0];
-    y0 = tmp[1];
-    delete(tmp);
-
-    cout << "rst:" << x << " " << y << " " << x0 << " " << y0 << endl;
-    
-    double KR=0, KB=0;
-    KR = pow(2, x0);
-    KB = pow(2, y0);
-    
-    
-
-    //求原始图像的RGB分量的均值  
-    double R, G, B;  
-    vector<Mat> imageRGB;  
-
-    //RGB三通道分离  
-    split(imageSource, imageRGB);  
-                
-  
-    //调整RGB三个通道各自的值  
-    imageRGB[0] = imageRGB[0] * KB;  
-    imageRGB[2] = imageRGB[2] * KR;  
-  
-
-    //RGB三通道图像合并  
-    merge(imageRGB, imageSource);  
-    cvNamedWindow("after", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
-    cvResizeWindow("after", 1024, 768);
-    cvMoveWindow("after", 1024, 0);
-    imshow("after", imageSource);  
-    string sOutName(filename);
-    string pre("ctc_");
-    pre.append(sOutName);
-    imwrite(pre.c_str(), imageSource);
-
-    cout << "KB,KG,kR:" << KB << " " << "1" << " " << KR << endl;
-    //求变换后图像RGB分量的均值  
-    B = mean(imageRGB[0])[0];  
-    G = mean(imageRGB[1])[0];  
-    R = mean(imageRGB[2])[0];  
-    cout << "B,G,R:" << B << " " << G << " " << R << endl;
-  
-    waitKey();  
+    closedir(dir);
     return 0;  
 }
