@@ -1,5 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include <dirent.h>
 
 using namespace std;
 using namespace cv;
@@ -82,13 +83,34 @@ float colorCheck(const Mat& imgLab)
 }
 
 int main(int argc, char** argv){
-    char *filename = "test.jpg";
-    if(argc == 2){
-        filename = argv[1];
+    char * dirname = "./";
+    if(argc > 1)
+    {
+        dirname = argv[1];
     }
-    Mat srcImg = imread(filename);
-    Mat srcLab;
-    RGB2LAB(srcImg, srcLab);
-    float K = colorCheck(srcLab);
-    cout << "K:" << K << endl;
+
+    struct dirent *dirp;
+    
+    DIR* dir = opendir(dirname);
+    
+    while ((dirp = readdir(dir)) != NULL) {
+        if (dirp->d_type == DT_REG) {
+            const char *filename = dirp->d_name;
+            stringstream ss;
+            ss << dirname << dirp->d_name;
+            string sName = ss.str();
+            const char *pathName = sName.c_str();
+
+            Mat srcImg = imread(pathName);
+            Mat srcLab;
+            RGB2LAB(srcImg, srcLab);
+            float K = colorCheck(srcLab);
+            cout << filename << " " << "K:" << K << endl;
+
+        } else if (dirp->d_type == DT_DIR) {
+            // 文件夹
+        }
+    }
+    
+    closedir(dir);
 }
