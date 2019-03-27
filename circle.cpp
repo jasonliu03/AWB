@@ -134,12 +134,15 @@ int main(int argc, char** argv)
 
     //RGB三通道图像合并  
     merge(imageRGB, imageSource);  
-    cvNamedWindow("after", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
-    imshow("after", imageSource);  
+    cvNamedWindow("after_AWB", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
+    imshow("after_AWB", imageSource);  
 
     merge(imageRGB2, imageSource);  
-    cvNamedWindow("after2", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
-    imshow("after2", imageSource);  
+    cvNamedWindow("after_circle", CV_WINDOW_NORMAL| CV_WINDOW_KEEPRATIO| CV_GUI_EXPANDED);
+    imshow("after_circle", imageSource);  
+    string outFilename = filename;
+    outFilename = "circle_" + outFilename;
+    imwrite(outFilename, imageSource);
 
     cout << "B,G,R:" << B << " " << G << " " << R << endl;
     cout << "KB,KG,kR:" << KB << " " << KG << " " << KR << endl;
